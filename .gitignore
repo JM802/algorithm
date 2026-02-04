@@ -14,3 +14,11 @@ bin/
 # 忽略调试符号文件
 *.pdb
 *.dSYM/
+
+# 忽略 macOS 系统垃圾文件
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# 忽略文件夹下的所有 .DS_Store
+**/.DS_Store
