@@ -1,15 +1,12 @@
 #include<iostream>
-#include<vector>
 using namespace std;
-
 
 class TreeNode
 {
+public:
     int val;
     TreeNode *left;
     TreeNode *right;
-
-    
     TreeNode():val(0),left(nullptr),right(nullptr)
     {
 
@@ -19,17 +16,34 @@ class TreeNode
     {
 
     }
+
+    TreeNode(int x,TreeNode*left,TreeNode*right):val(x),left(left),right(right)
+    {
+
+    }
 };
+
+vector<int> v1;
+
+class Solution
+{
+public:
+    vector<int> preorderTraversal(TreeNode* root)
+    {
+        if(root==nullptr)
+        {
+            return v1;
+        }
+        v1.push_back(root->val);
+        preorderTraversal(root->left);
+        preorderTraversal(root->right);
+
+        return v1;
+    }
+};
+
 
 int main()
 {
-    vector<int> v1={1,4,3};
-    for (int i = 0; i < v1.size();i++)
-    {
-        for (int j = 0; j < v1[i];j++)
-        {
-            cout << "hello world" << endl;
-        }
-    }
-    return 0;
+
 }
