@@ -23,23 +23,53 @@ public:
 class Solution
 {
 public:
-    void getpath(TreeNode*root,vector<string>&path,string&s)
+    void tranversal(TreeNode*root,vector<string>&res,vector<int>&path)
     {
         if(!root)
         {
-            path.push_back(s);
             return;
         }
-        s.push_back(root->val);
-        getpath(root->left, path, s);
-        getpath(root->right, path, s);
-        s.pop_back();
+
+        path.push_back(root->val);
+
+        if(!root->left&&!root->right)
+        {
+            string s="";
+            for (int i = 0; i < path.size(); i++)
+            {
+                if(i!=path.size()-1)
+                {
+                    s += to_string(path[i]);
+                    s += "->";
+                }
+                else
+                {
+                    s += to_string(path[i]);
+                }
+            }
+            res.push_back(s);
+            return;
+        }
+
+        if(root->left)
+        {
+            tranversal(root->left, res, path);
+            path.pop_back();
+        }
+
+        if (root->right)
+        {
+            tranversal(root->right, res, path);
+            path.pop_back();
+        }
+        return;
     }
+
     vector<string> binaryTreePaths(TreeNode *root)
     {
-        string s = "";
-        vector<string> path;
-        getpath(root, path, s);
-        return path;
+        vector<int>path;
+        vector<string> res;
+        tranversal(root, res, path);
+        return res;
     }
 };
