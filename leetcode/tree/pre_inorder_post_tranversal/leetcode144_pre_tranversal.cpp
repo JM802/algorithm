@@ -109,7 +109,7 @@ int main()
     getline(cin, line);
     stringstream ss(line);
     string token;
-    while (getline(ss,token,','))//why "" doesn't work
+    while (getline(ss,token,','))
     {
         vs.push_back(token);
     }
