@@ -35,7 +35,6 @@ public:
             getlettercombination(digits, index + 1);
             path.pop_back();
         }
-        return;
     }
     vector<string> letterCombinations(string digits)
     {
