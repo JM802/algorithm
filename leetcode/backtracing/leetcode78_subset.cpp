@@ -10,14 +10,14 @@ vector<int> path;
 class Solution
 {
 public:
-    void backtracing(const vector<int>&nums,int startindex)
+    void backtracing(const vector<int> &nums, int startindex)
     {
         res.push_back(path);
-        if(startindex>=nums.size())
+        if (startindex >= nums.size())
         {
             return;
         }
-        for (int i = startindex; i < nums.size();i++)
+        for (int i = startindex; i < nums.size(); i++)
         {
             path.push_back(nums[i]);
             backtracing(nums, i + 1);

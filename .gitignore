@@ -23,3 +23,5 @@ bin/
 
 # 忽略文件夹下的所有 .DS_Store
 **/.DS_Store
+
+CLAUDE.md

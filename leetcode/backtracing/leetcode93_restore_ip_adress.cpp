@@ -10,13 +10,13 @@ vector<string> res;
 class Solution
 {
 public:
-    bool isvalid(const string&s,int start,int end)
+    bool isvalid(const string &s, int start, int end)
     {
-        if(start>end)
+        if (start > end)
         {
             return false;
         }
-        if(s[start]=='0'&&start!=end)
+        if (s[start] == '0' && start != end)
         {
             return false;
         }
@@ -24,13 +24,13 @@ public:
         int num = 0;
         for (int i = start; i <= end; i++)
         {
-            if(s[i]>'9'||s[i]<'0')
+            if (s[i] > '9' || s[i] < '0')
             {
                 return false;
             }
 
             num = num * 10 + (s[i] - '0');
-            if(num>255)
+            if (num > 255)
             {
                 return false;
             }
@@ -38,26 +38,30 @@ public:
         return true;
     }
 
-    void backtracing(string&s,int startindex,int&pointcount)
+    void backtracing(string &s, int startindex, int &pointcount)
     {
-        if(pointcount==3)
+        if (pointcount == 3)
         {
-            if(isvalid(s,startindex,s.size()-1))
+            if (isvalid(s, startindex, s.size() - 1))
             {
                 res.push_back(s);
             }
             return;
         }
 
-        for (int i = startindex; i < s.size();i++)
+        for (int i = startindex; i < s.size(); i++)
         {
-            if(isvalid(s,startindex,i))
+            if (isvalid(s, startindex, i))
             {
-                s.insert(s.begin()+i+1,'.');
+                s.insert(s.begin() + i + 1, '.');
                 pointcount++;
                 backtracing(s, i + 2, pointcount);
                 pointcount--;
-                s.erase(s.begin()+i+1);
+                s.erase(s.begin() + i + 1);
+            }
+            else
+            {
+                break;
             }
         }
     }
@@ -65,6 +69,10 @@ public:
     {
         res.clear();
         int pointcount = 0;
+        if (s.size() < 4 || s.size() > 12)
+        {
+            return res;
+        }
         backtracing(s, 0, pointcount);
         return res;
     }
