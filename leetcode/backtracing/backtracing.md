@@ -120,6 +120,77 @@ void backtracing(string digits, int index) {
 
 **一句话：切割问题就是把字符串下标当作集合，选切割点就是选数字。**
 
+### startindex vs used 数组：什么时候用哪个？
+
+| | startindex | used 数组 |
+|---|---|---|
+| **用于** | 组合、子集、切割 | **排列** |
+| **for 循环起点** | 从 startindex 开始 | 从 0 开始 |
+| **防止什么** | 回头选前面的元素 | 同一个元素被选两次 |
+| **为什么** | 顺序无关，{1,2}={2,1} | 顺序有关，[1,2]≠[2,1] |
+| **能不能回头** | **不能**，只能往后选 | **能**，但用过的不能再选 |
+
+**核心区别：排列问题 1→2→3 和 2→1→3 是不同结果，必须允许回头选之前的元素。组合问题 1→2→3 和 2→1→3 是同一个结果，不需要回头。**
+
+**什么时候用 startindex？** 单集合的组合、子集、切割问题 — 防止回头，只能往 startindex 之后选。
+
+**什么时候用 used 数组？** 排列问题 — 必须从 0 开始遍历（允许回头），用 used 标记元素是否已使用。
+
+### 排列问题标准模版
+
+```cpp
+void backtracing(vector<int>& nums, vector<bool>& used) {
+    if (path.size() == nums.size()) {  // 排列长度 = 原数组长度
+        res.push_back(path);
+        return;
+    }
+    for (int i = 0; i < nums.size(); i++) {  // 从 0 开始！不是 startindex
+        if (used[i]) continue;               // 用过了就跳过
+        used[i] = true;
+        path.push_back(nums[i]);
+        backtracing(nums, used);
+        used[i] = false;
+        path.pop_back();
+    }
+}
+```
+
+### 排列问题去重（47 题 Permutations II）
+
+47 题 = 46 题 + 树层去重。集合有重复元素，排列结果会重复。
+
+**为什么只能用 used 数组去重，不能用 i > startIndex？**
+
+排列问题 for 循环从 0 开始，没有 startindex 概念，所以 `i > startIndex` 不适用。只能用 `used[i-1] == false` 来判断树层重复。
+
+**去重条件拆解：**
+
+```cpp
+if (i > 0 && nums[i-1] == nums[i] && used[i-1] == false)
+    continue;
+```
+
+- `i > 0`：两个原因 — (1) 防止 i-1 下标越界；(2) 逻辑上第一个元素永远合法，for 循环从 0 开始，第一个元素一定不会被跳过
+- `nums[i-1] == nums[i]`：当前元素和前一个值相同
+- `used[i-1] == false`：前一个已经回溯了（不在路径中）→ 同层重复，跳过
+
+**树层去重 vs 树枝去重（效率对比）：**
+
+| | 树层去重 | 树枝去重 |
+|---|---|---|
+| **条件** | `used[i-1] == false` | `used[i-1] == true` |
+| **含义** | 前一个相同值已回溯，同层重复，跳过 | 前一个相同值还在路径中，不同层，允许 |
+| **效果** | 直接剪掉整个同层分支 | 只防止同一路径内重复使用 |
+| **效率** | 高 — 一旦发现重复，整个子树都不遍历 | 低 — 不剪枝，只是跳过当前元素 |
+
+```cpp
+// 树层去重（高效，推荐）
+if (i > 0 && nums[i-1] == nums[i] && used[i-1] == false) continue;
+
+// 树枝去重（正确但低效）
+if (used[i] == true) continue;
+```
+
 ### 3. 剪枝：每道题不同，核心思想一致
 
 剪枝的本质是**提前排除不可能的分支**，具体条件因题而异：
@@ -237,6 +308,143 @@ for (int i = startindex; i < candidates.size(); i++) {
 
 **`used[i-1] == true` 的含义：前一个相同值的元素还在路径中（还没回溯），说明是不同层的递归，允许选。**
 
+### 5. 去重的另一种写法：i > startIndex
+
+```cpp
+sort(nums.begin(), nums.end());
+
+for (int i = startIndex; i < nums.size(); i++) {
+    // 树层去重：同层跳过相同值
+    if (i > startIndex && nums[i] == nums[i-1])
+        continue;
+
+    path.push_back(nums[i]);
+    backtracking(nums, i + 1);
+    path.pop_back();
+}
+```
+
+**为什么 `i > startIndex` 能区分树层和树枝？**
+
+```
+nums = [1, 1, 2]
+
+第0层: startIndex=0
+  i=0: i == startIndex → 第一个元素，一定允许，选第一个1，递归进入下一层
+  i=1: i > startIndex  → 不是第一个了，nums[1]==nums[0]，同层重复，跳过 ✓
+  i=2: i > startIndex  → nums[2]!=nums[1]，不跳过
+
+第1层（已选了第一个1）: startIndex=1
+  i=1: i == startIndex → 第一个元素，一定允许，选第二个1 → 树枝，合法 ✓
+  i=2: i > startIndex  → nums[2]!=nums[1]，不跳过
+```
+
+**核心原理：**
+- **`i == startIndex`**：for 循环在这一层的第一个位置，不管和前一个值是否相同，**永远允许**（每层第一个元素总是合法的）
+- **`i > startIndex`**：for 循环已经走到了这一层的第二个、第三个位置，如果此时 `nums[i] == nums[i-1]`，说明**同一层已经选过这个值了**，是树层重复，必须跳过
+
+**两种写法等价：**
+
+| | used 数组写法 | i > startIndex 写法 |
+|---|---|---|
+| **判断依据** | 前一个相同值是否还在路径中 | 当前元素是否是这一层的第一个 |
+| **树枝去重** | `used[i-1] == true` → 允许 | `i == startIndex` → 允许 |
+| **树层去重** | `used[i-1] == false` → 跳过 | `i > startIndex` 且相同值 → 跳过 |
+| **额外空间** | 需要 used 数组 | 不需要 |
+
 ### 5. 典型对应题目
 
 力扣 40. Combination Sum II：集合有重复元素，每个元素只能选一次，必须树层去重。
+
+### 6. 三种去重方法对比
+
+| | used 数组 | i > startIndex | unordered_set |
+|---|---|---|---|
+| **前提** | 集合有重复元素 + **可以排序** | 集合有重复元素 + **可以排序** | 集合有重复元素 + **不能排序** |
+| **原理** | 记录每个元素是否在路径中 | 每层第一个元素一定合法，后面的重复才跳过 | 每层独立维护一个 set，记录本层已经选过的值 |
+| **额外空间** | 需要 used 数组 | 不需要 | 每层一个 unordered_set |
+| **典型题目** | 40、90 | 90 | **491** |
+
+**为什么 491 题不能用前两种？**
+
+491 要求的是**非递减子序列**，必须保持原数组顺序。如果先排序，原顺序被破坏，结果就不对了。前两种方法都依赖排序让相同值相邻，所以都不适用。
+
+**491 题的 unordered_set 去重：**
+
+```cpp
+for (int i = startindex; i < nums.size(); i++) {
+    // 每层重新定义 uset，只管本层的去重
+    if (i > startindex && uset.find(nums[i]) != uset.end())
+        continue;  // 本层已经选过这个值了，跳过
+
+    uset.insert(nums[i]);  // 记录本层选过的值
+    path.push_back(nums[i]);
+    backtracing(nums, i + 1);
+    path.pop_back();
+}
+```
+
+**为什么不需要 `i > startIndex`？** 因为 uset 是每层重新定义的，`i == startIndex` 时 set 为空，`find` 一定找不到，自然不会跳过。所以 `i > startIndex` 写不写都行，但加上更清晰。
+
+**unordered_set 使用要点：**
+
+1. **必须每层重新定义**：`unordered_set<int> uset` 写在 for 循环**外面、函数里面**（每层调用时重新创建）。目的是只管本层去重，不能全局维护。如果全局维护，上一层选过的元素在下一层也会被跳过，结果就错了。
+
+2. **不能用 set，必须用 unordered_set**：`set` 会自动排序，改变元素顺序，不符合题目要求（如 491 题要求保持原数组顺序）。`unordered_set` 不排序，只做去重。
+
+3. **必须用 find 函数**：`unordered_set` 内部是哈希表，元素被映射成 hash 值存储，没有顺序概念，无法用 `==` 或比较运算符判断。只能用 `uset.find(nums[i]) != uset.end()` 判断是否存在。
+
+---
+
+## 四、解数独（37）：二维回溯 + bool 返回值
+
+### 1. 和之前回溯题的本质区别
+
+| | 之前的一维回溯（组合/排列/切割） | 解数独（二维回溯） |
+|---|---|---|
+| **选哪个元素** | startindex 或 for 从 0 开始确定 | 双层 for 循环扫描找到下一个空格 |
+| **递归深度** | path.size() 或 index 控制 | 找到下一个空格就递归，填满为止 |
+| **返回值** | 通常 void（收集所有结果） | **bool**（找一个就停） |
+| **树形结构** | 每层有明确的"选择列表" | 每个空格就是一层，选择列表是 1~9 |
+
+### 2. 双层 for 循环的作用
+
+双层 for 循环扫描整个棋盘，找到**第一个空格**（`'.'`），然后尝试填 1~9。找到后就递归进入下一层（下一层继续扫描找下一个空格）。这替代了之前 startindex / index 的定位功能。
+
+```cpp
+bool backtracing(vector<vector<char>>& board) {
+    for (int i = 0; i < board.size(); i++) {
+        for (int j = 0; j < board[0].size(); j++) {
+            if (board[i][j] == '.') {           // 找到第一个空格
+                for (char c = '1'; c <= '9'; c++) {  // 尝试 1~9
+                    if (isvalid(board, c, i, j)) {
+                        board[i][j] = c;
+                        if (backtracing(board)) return true;  // 找到了，往上传递
+                        board[i][j] = '.';                    // 回溯
+                    }
+                }
+                return false;  // 1~9 都试过都不行 → 返回 false 让上一层换数字
+            }
+        }
+    }
+    return true;  // 整个棋盘扫完没有空格 → 解找到了
+}
+```
+
+### 3. 三个 return 的含义
+
+| 位置 | 返回值 | 含义 |
+|------|--------|------|
+| **双层 for 循环结束后** | `return true` | 棋盘全部填满，找到最终解 |
+| **收到递归的 true 后** | `return true` | 下层已经解决了，往上层传递，不再试后续数字 |
+| **1~9 全部失败后** | `return false` | 当前位置填什么都不行，说明之前填错了，让上一层换数字 |
+
+### 4. void vs bool 返回值
+
+| | void（大部分回溯题） | bool（解数独） |
+|---|---|---|
+| **用途** | 找出**所有**解 | 找出**一个**解 |
+| **找到解后** | 收集结果，继续搜索 | `return true` 直接终止全部搜索 |
+| **典型题目** | 77, 40, 46, 51 | **37** |
+
+**解数独用 bool 的原因**：题目只要求一个可行解，bool 返回值让找到解后能"一层层往上传递 true"，自动提前终止，不再搜索其他分支。
