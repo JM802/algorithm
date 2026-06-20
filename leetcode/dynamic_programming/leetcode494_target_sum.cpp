@@ -29,26 +29,15 @@ public:
         }
 
         vector<vector<int>> dp(nums.size(), vector<int>(real + 1, 0));
+        dp[0][0] = 1;
         if (nums[0] <= real)
         {
-            dp[0][nums[0]] = 1;
-        }
-
-        dp[0][0] = 1;
-
-        int countzero = 0;
-        for (int i = 0; i < nums.size(); i++)
-        {
-            if (nums[i] == 0)
-            {
-                countzero++;
-            }
-            dp[i][0] = (int)pow(2.0, countzero);
+            dp[0][nums[0]] += 1;
         }
 
         for (int i = 1; i < nums.size(); i++)
         {
-            for (int j = 1; j <= real; j++)
+            for (int j = 0; j <= real; j++)
             {
                 if (nums[i] > j)
                 {
