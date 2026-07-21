@@ -60,6 +60,61 @@ for (int i = startindex; i <= n; i++) {
 
 **关键：单集合遍历不需要单独处理第一个节点**，因为 backtracking 函数内已经完整处理了所有节点的遍历。调用时只需 `backtracing(n, k, 1)` 传入起始位置即可。这和之前总结的 DFS 的套路一一致——第一个点在函数内处理。
 
+**经典题：77 组合（叶子节点收集 + startindex 剪枝）**
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    void backtracing(int n, int k, int startindex) {
+        if (path.size() == k) {
+            res.push_back(path);
+            return;
+        }
+        for (int i = startindex; i <= n - (k - path.size()) + 1; i++) {
+            path.push_back(i);
+            backtracing(n, k, i + 1);
+            path.pop_back();
+        }
+    }
+    vector<vector<int>> combine(int n, int k) {
+        res.clear(); path.clear();
+        backtracing(n, k, 1);
+        return res;
+    }
+};
+```
+
+**经典题：216 组合总和3（叶子收集 + sum剪枝）**
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    void backtracing(int k, int n, int sum, int startindex) {
+        if (sum > n) return;                    // 剪枝：和已经超了
+        if (path.size() == k) {
+            if (sum == n) res.push_back(path);  // 叶子收集
+            return;
+        }
+        for (int i = startindex; i <= 9 - (k - path.size()) + 1; i++) {
+            sum += i;
+            path.push_back(i);
+            backtracing(k, n, sum, i + 1);
+            sum -= i;
+            path.pop_back();
+        }
+    }
+    vector<vector<int>> combinationSum3(int k, int n) {
+        res.clear(); path.clear();
+        backtracing(k, n, 0, 1);
+        return res;
+    }
+};
+```
+
 ### 2. 多集合遍历 = 用 index 控制深度，每层完整遍历
 
 当题目是**多个独立集合各选一个元素**（如 leetcode17 每个 digit 对应一个字母集合），不能用 startindex，因为每个集合是独立的，不存在"回头"问题。每层 for 循环都从 `i = 0` 开始，遍历当前集合的完整内容。
@@ -73,24 +128,37 @@ for (int i = startindex; i <= n; i++) {
 | **含义** | `j = i + 1`，不回头选前面的 | 当前处理第几个集合 |
 | **树形特征** | 宽度逐渐缩小 | 每层宽度独立不变 |
 
-```cpp
-// leetcode17: 多集合遍历
-void backtracing(string digits, int index) {
-    if (index == digits.size()) {   // 深度到头，收集结果
-        res.push_back(path);
-        return;
-    }
-    int mapindex = digits[index] - '0';
-    string letter = lettermap[mapindex];
-    for (int i = 0; i < letter.size(); i++) {  // 每层从0开始，完整遍历当前集合
-        path.push_back(letter[i]);
-        backtracing(digits, index + 1);         // index+1 进入下一层（下一个集合）
-        path.pop_back();
-    }
-}
-```
-
 **分类判据：拿到一道题先问——是一个集合选多个，还是多个集合各选一个？**
+
+**经典题：17 电话号码的字母组合（多集合遍历）**
+
+```cpp
+class Solution {
+public:
+    vector<string> res;
+    string path;
+    string lettermap[10] = {"","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
+    void backtracing(string digits, int index) {
+        if (index == digits.size()) {
+            res.push_back(path);
+            return;
+        }
+        int mapindex = digits[index] - '0';
+        string letter = lettermap[mapindex];
+        for (int i = 0; i < letter.size(); i++) {  // 每层从0开始
+            path.push_back(letter[i]);
+            backtracing(digits, index + 1);
+            path.pop_back();
+        }
+    }
+    vector<string> letterCombinations(string digits) {
+        res.clear(); path.clear();
+        if (digits.empty()) return res;
+        backtracing(digits, 0);
+        return res;
+    }
+};
+```
 
 ### 切割问题 = 组合问题的变体
 
@@ -119,6 +187,39 @@ void backtracing(string digits, int index) {
 ```
 
 **一句话：切割问题就是把字符串下标当作集合，选切割点就是选数字。**
+
+**经典题：131 分割回文串（切割问题）**
+
+```cpp
+class Solution {
+public:
+    vector<vector<string>> res;
+    bool ispalindrome(const string& s, int start, int end) {
+        for (int i = start, j = end; i < j; i++, j--)
+            if (s[i] != s[j]) return false;
+        return true;
+    }
+    void backtracing(const string& s, int startindex, vector<string>& path) {
+        if (startindex >= s.size()) {
+            res.push_back(path);
+            return;
+        }
+        for (int i = startindex; i < s.size(); i++) {
+            if (ispalindrome(s, startindex, i)) {
+                string substr = s.substr(startindex, i - startindex + 1);
+                path.push_back(substr);
+                backtracing(s, i + 1, path);  // i+1：下一刀从当前位置之后
+                path.pop_back();
+            }
+        }
+    }
+    vector<vector<string>> partition(string s) {
+        vector<string> path;
+        backtracing(s, 0, path);
+        return res;
+    }
+};
+```
 
 ### startindex vs used 数组：什么时候用哪个？
 
@@ -153,6 +254,36 @@ void backtracing(vector<int>& nums, vector<bool>& used) {
         path.pop_back();
     }
 }
+```
+
+**经典题：46 全排列**
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    void backtracing(vector<int>& nums, vector<bool>& used) {
+        if (path.size() == nums.size()) {
+            res.push_back(path);
+            return;
+        }
+        for (int i = 0; i < nums.size(); i++) {
+            if (used[i]) continue;
+            used[i] = true;
+            path.push_back(nums[i]);
+            backtracing(nums, used);
+            used[i] = false;
+            path.pop_back();
+        }
+    }
+    vector<vector<int>> permute(vector<int>& nums) {
+        res.clear(); path.clear();
+        vector<bool> used(nums.size(), false);
+        backtracing(nums, used);
+        return res;
+    }
+};
 ```
 
 ### 排列问题去重（47 题 Permutations II）
@@ -191,6 +322,38 @@ if (i > 0 && nums[i-1] == nums[i] && used[i-1] == false) continue;
 if (used[i] == true) continue;
 ```
 
+**经典题：47 全排列2（排列 + 树层去重）**
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    void backtracing(vector<int>& nums, vector<bool>& used) {
+        if (path.size() == nums.size()) {
+            res.push_back(path);
+            return;
+        }
+        for (int i = 0; i < nums.size(); i++) {
+            if (i > 0 && nums[i - 1] == nums[i] && used[i - 1] == false)
+                continue;  // 树层去重：同层跳过相同值
+            used[i] = true;
+            path.push_back(nums[i]);
+            backtracing(nums, used);
+            used[i] = false;
+            path.pop_back();
+        }
+    }
+    vector<vector<int>> permuteUnique(vector<int>& nums) {
+        res.clear(); path.clear();
+        sort(nums.begin(), nums.end());  // 先排序，让相同值相邻
+        vector<bool> used(nums.size(), false);
+        backtracing(nums, used);
+        return res;
+    }
+};
+```
+
 ### 3. 剪枝：每道题不同，核心思想一致
 
 剪枝的本质是**提前排除不可能的分支**，具体条件因题而异：
@@ -212,6 +375,35 @@ for (int i = startindex; i < candidates.size() && sum + candidates[i] <= target;
 ```
 
 排序后 `sum + candidates[i] > target`，说明当前元素已经超了，后面更大的元素更不可能，**直接跳出整个 for 循环**，效率远高于在函数入口 `if (sum > target) return`（那个只跳过当次递归，for 循环还会继续）。
+
+**经典题：39 组合总和（排序+剪枝 + 元素可重复选）**
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    void backtracing(vector<int>& candidates, int target, int sum, int startindex) {
+        if (sum == target) {
+            res.push_back(path);
+            return;
+        }
+        for (int i = startindex; i < candidates.size() && sum + candidates[i] <= target; i++) {
+            sum += candidates[i];
+            path.push_back(candidates[i]);
+            backtracing(candidates, target, sum, i);  // 传 i，不是 i+1，可重复选
+            sum -= candidates[i];
+            path.pop_back();
+        }
+    }
+    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {
+        res.clear(); path.clear();
+        sort(candidates.begin(), candidates.end());  // 先排序，for循环条件剪枝
+        backtracing(candidates, target, 0, 0);
+        return res;
+    }
+};
+```
 
 ### 3.6 元素可重复选：startindex 不 +1
 
@@ -251,6 +443,64 @@ void backtracing(int n, int k, int sum, int startindex) {
 ```
 
 **写法二和写法三本质一样**：原 sum 没有被修改，不需要回溯。写法一 `sum += i` 直接改了 sum，不管值传递还是引用传递，都必须 `sum -= i` 恢复。
+
+### 子集问题：所有节点收集结果
+
+**78 子集**：每个节点都是合法结果，进入递归就收集（不是叶子才收集）。
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    void backtracing(vector<int>& nums, int startindex) {
+        res.push_back(path);  // 所有节点都收集，不只是叶子
+        if (startindex >= nums.size()) return;
+        for (int i = startindex; i < nums.size(); i++) {
+            path.push_back(nums[i]);
+            backtracing(nums, i + 1);
+            path.pop_back();
+        }
+    }
+    vector<vector<int>> subsets(vector<int>& nums) {
+        res.clear(); path.clear();
+        backtracing(nums, 0);
+        return res;
+    }
+};
+```
+
+**90 子集2（有重复元素 + 去重）**：排序 + `i > startindex && nums[i-1] == nums[i]` 树层去重。
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    void backtracing(vector<int>& nums, int startindex, vector<bool>& used) {
+        res.push_back(path);
+        if (startindex >= nums.size()) return;
+        for (int i = startindex; i < nums.size(); i++) {
+            if (i > 0 && nums[i - 1] == nums[i] && used[i - 1] == false)
+                continue;  // 树层去重
+            path.push_back(nums[i]);
+            used[i] = true;
+            backtracing(nums, i + 1, used);
+            used[i] = false;
+            path.pop_back();
+        }
+    }
+    vector<vector<int>> subsetsWithDup(vector<int>& nums) {
+        res.clear(); path.clear();
+        sort(nums.begin(), nums.end());
+        vector<bool> used(nums.size(), false);
+        backtracing(nums, 0, used);
+        return res;
+    }
+};
+```
+
+**78 vs 90 对比**：78 无重复元素不需要去重；90 有重复元素，必须排序 + 树层去重。
 
 ---
 
@@ -356,6 +606,50 @@ nums = [1, 1, 2]
 
 力扣 40. Combination Sum II：集合有重复元素，每个元素只能选一次，必须树层去重。
 
+**经典题：40 组合总和2（有重复元素 + 每个只能选一次 + 排序剪枝）**
+
+```cpp
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<int> path;
+    void backtracing(int target, int sum, vector<int>& candidates, int startindex, vector<bool>& used) {
+        if (sum == target) {
+            res.push_back(path);
+            return;
+        }
+        for (int i = startindex; i < candidates.size() && sum + candidates[i] <= target; i++) {
+            // 树层去重：同层跳过相同值
+            if (i > 0 && candidates[i - 1] == candidates[i] && used[i - 1] == false)
+                continue;
+            sum += candidates[i];
+            path.push_back(candidates[i]);
+            used[i] = true;
+            backtracing(target, sum, candidates, i + 1, used);  // i+1，不能重复选
+            used[i] = false;
+            sum -= candidates[i];
+            path.pop_back();
+        }
+    }
+    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {
+        res.clear(); path.clear();
+        sort(candidates.begin(), candidates.end());
+        vector<bool> used(candidates.size(), false);
+        backtracing(target, 0, candidates, 0, used);
+        return res;
+    }
+};
+```
+
+**39 vs 40 对比**：
+
+| | 39 组合总和 | 40 组合总和2 |
+|---|---|---|
+| **重复元素** | 可以重复选 | 每个只能选一次 |
+| **递归传** | `i`（可回头） | `i + 1`（不能回头） |
+| **去重** | 不需要 | 需要树层去重 |
+| **剪枝** | `sum + candidates[i] <= target` | 同左 |
+
 ### 6. 三种去重方法对比
 
 | | used 数组 | i > startIndex | unordered_set |
@@ -393,6 +687,32 @@ for (int i = startindex; i < nums.size(); i++) {
 2. **不能用 set，必须用 unordered_set**：`set` 会自动排序，改变元素顺序，不符合题目要求（如 491 题要求保持原数组顺序）。`unordered_set` 不排序，只做去重。
 
 3. **必须用 find 函数**：`unordered_set` 内部是哈希表，元素被映射成 hash 值存储，没有顺序概念，无法用 `==` 或比较运算符判断。只能用 `uset.find(nums[i]) != uset.end()` 判断是否存在。
+
+**经典题：491 非递减子序列（不能排序 + unordered_set 去重）**
+
+```cpp
+vector<vector<int>> result;
+    vector<int> path;
+    void backtracking(vector<int>& nums, int startIndex) {
+        if (path.size() > 1) {
+            result.push_back(path);
+            // 注意这里不要加return，要取树上的节点
+        }
+        unordered_set<int> uset; // 使用set对本层元素进行去重
+        for (int i = startIndex; i < nums.size(); i++) {
+            if ((!path.empty() && nums[i] < path.back())
+                    || uset.find(nums[i]) != uset.end()) {
+                    continue;
+            }
+            uset.insert(nums[i]); // 记录这个元素在本层用过了，本层后面不能再用了
+            path.push_back(nums[i]);
+            backtracking(nums, i + 1);
+            path.pop_back();
+        }
+    }
+```
+
+**为什么 491 不能用排序去重？** 排序会改变原数组顺序，但题目要求保持原顺序的非递减子序列。所以只能用 unordered_set 每层去重。
 
 ---
 
@@ -448,3 +768,82 @@ bool backtracing(vector<vector<char>>& board) {
 | **典型题目** | 77, 40, 46, 51 | **37** |
 
 **解数独用 bool 的原因**：题目只要求一个可行解，bool 返回值让找到解后能"一层层往上传递 true"，自动提前终止，不再搜索其他分支。
+
+**经典题：51 N皇后（二维回溯 + isValid验证）**
+
+```cpp
+class Solution {
+public:
+    vector<vector<string>> res;
+    bool isvalid(vector<string>& chessboard, int n, int row, int col) {
+        // 检查列
+        for (int i = 0; i < row; i++)
+            if (chessboard[i][col] == 'Q') return false;
+        // 检查左上对角线
+        for (int i = row - 1, j = col - 1; i >= 0 && j >= 0; i--, j--)
+            if (chessboard[i][j] == 'Q') return false;
+        // 检查右上对角线
+        for (int i = row - 1, j = col + 1; i >= 0 && j < n; i--, j++)
+            if (chessboard[i][j] == 'Q') return false;
+        return true;
+    }
+    void backtracing(int n, int row, vector<string>& chessboard) {
+        if (row == n) {
+            res.push_back(chessboard);
+            return;
+        }
+        for (int col = 0; col < n; col++) {
+            if (isvalid(chessboard, n, row, col)) {
+                chessboard[row][col] = 'Q';
+                backtracing(n, row + 1, chessboard);
+                chessboard[row][col] = '.';
+            }
+        }
+    }
+    vector<vector<string>> solveNQueens(int n) {
+        res.clear();
+        vector<string> chessboard(n, string(n, '.'));
+        backtracing(n, 0, chessboard);
+        return res;
+    }
+};
+```
+
+**经典题：37 解数独（二维回溯 + bool返回值）**
+
+```cpp
+class Solution {
+public:
+    bool isvalid(vector<vector<char>>& board, char c, int x, int y) {
+        for (int row = 0; row < 9; row++)
+            if (board[row][y] == c) return false;
+        for (int col = 0; col < 9; col++)
+            if (board[x][col] == c) return false;
+        int xstart = x / 3 * 3, ystart = y / 3 * 3;
+        for (int i = xstart; i < xstart + 3; i++)
+            for (int j = ystart; j < ystart + 3; j++)
+                if (board[i][j] == c) return false;
+        return true;
+    }
+    bool backtracing(vector<vector<char>>& board) {
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                if (board[i][j] == '.') {
+                    for (char c = '1'; c <= '9'; c++) {
+                        if (isvalid(board, c, i, j)) {
+                            board[i][j] = c;
+                            if (backtracing(board)) return true;
+                            board[i][j] = '.';
+                        }
+                    }
+                    return false;  // 1~9都不行，返回false让上层换数字
+                }
+            }
+        }
+        return true;  // 全部填满，找到解
+    }
+    void solveSudoku(vector<vector<char>>& board) {
+        backtracing(board);
+    }
+};
+```

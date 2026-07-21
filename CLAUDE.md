@@ -1,6 +1,30 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ## 仓库性质
 
 这是一个算法学习仓库，包含 LeetCode 题解、课程实验代码、算法作业。用户是正在学习算法的学生，使用语音输入为主（输入可能有口语化表达、断句不清、错别字），需要你帮他梳理思路、纠正理解。
+
+## 编译与运行
+
+无 Makefile 或 CMakeLists.txt，直接用 g++ 编译单个文件：
+
+```bash
+# 编译（Windows 下生成 .exe）
+g++ -o output/solution.exe leetcode/backtracing/leetcode77_combination.cpp
+
+# 运行
+./output/solution.exe
+```
+
+## 目录结构
+
+- `leetcode/` — LeetCode 题解，按题型分目录（backtracing/dynamic_programming/graph/tree/greedy/linklist）
+- `algorithm_homework/` — 算法课程作业，按周分目录
+- `experiment/` — 课程实验代码
+- `midtest/` — 期中测试代码
+- `课件/` — 课程复习笔记（按章节分文件）
 
 ## 核心交互模式
 
@@ -26,6 +50,7 @@
 | `leetcode/graph/dfs_and_bfs.md`                       | DFS/BFS 两种套路对比、回溯本质、层序遍历、拓扑排序                        |
 | `leetcode/tree/回溯.md`                               | 回溯模版、三种常见套路（进门直接处理、标准模版、值传递）                  |
 | `leetcode/tree/遍历相关逻辑.md`                       | 前中后序遍历（引用/值传递）、层序遍历                                     |
+| `leetcode/tree/binary_tree.md`                        | 二叉树分治与递归                                                          |
 | `leetcode/greedy/greedy.md`                           | 贪心算法本质、与动态规划的区别                                            |
 
 ## 代码风格

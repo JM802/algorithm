@@ -23,25 +23,25 @@ public:
 class Solution
 {
 public:
-    void tranversal(TreeNode*root,int targetSum,int sum,vector<int>&path,vector<vector<int>>&res)
+    void tranversal(TreeNode *root, int targetSum, int sum, vector<int> &path, vector<vector<int>> &res)
     {
-        if(!root->left&&!root->right)
+        if (!root->left && !root->right)
         {
-            if(targetSum==sum)
+            if (targetSum == sum)
             {
                 res.push_back(path);
             }
             return;
         }
 
-        if(root->left)
+        if (root->left)
         {
             path.push_back(root->left->val);
             tranversal(root->left, targetSum, sum + root->left->val, path, res);
             path.pop_back();
         }
 
-        if(root->right)
+        if (root->right)
         {
             path.push_back(root->right->val);
             tranversal(root->right, targetSum, sum + root->right->val, path, res);
@@ -51,9 +51,9 @@ public:
     }
     vector<vector<int>> pathSum(TreeNode *root, int targetSum)
     {
-        if(!root)
+        if (!root)
         {
-            return {{}};
+            return {};
         }
         vector<vector<int>> res;
         vector<int> path;
